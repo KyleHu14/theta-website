@@ -1,7 +1,16 @@
+// Mantine
 import "@mantine/core/styles.css";
-import React from "react";
 import { MantineProvider, ColorSchemeScript } from "@mantine/core";
 import { theme } from "../../theme";
+
+// React
+import React from "react";
+
+// Components
+import Navbar from "../components/Navbar/Navbar";
+
+// Globals css
+import "./globals.css";
 
 export const metadata = {
 	title: "Kappa Alpha Theta @ UCI",
@@ -20,7 +29,10 @@ export default function RootLayout({ children }: { children: any }) {
 				/>
 			</head>
 			<body>
-				<MantineProvider theme={theme}>{children}</MantineProvider>
+				<MantineProvider theme={theme}>
+					<Navbar />
+					{children}
+				</MantineProvider>
 			</body>
 		</html>
 	);

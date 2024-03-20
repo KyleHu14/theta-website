@@ -1,0 +1,13 @@
+.fileInput {
+	max-width: var(--max-w-sm);
+
+	border: rem(1px) solid
+		light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+	border-radius: 5px;
+
+	padding: 2rem;
+}
+
+.generateBtn {
+	margin-top: 1rem;
+}

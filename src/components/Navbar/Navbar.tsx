@@ -9,22 +9,22 @@ import Link from "next/link";
 
 const links = [
 	{ link: "/", label: "Home" },
-	{ link: "/boothing-form", label: "Boothing Form" },
+	{ link: "/boothing", label: "Boothing" },
 ];
 
 export default function Navbar() {
 	const [opened, { toggle }] = useDisclosure(false);
-	const [active, setActive] = useState(links[0].link);
+	// const [active, setActive] = useState(links[0].link);
 
 	const items = links.map((link) => (
 		<Link
 			key={link.label}
 			href={link.link}
 			className={classes.link}
-			data-active={active === link.link || undefined}
+			// data-active={active === link.link || undefined}
 			onClick={(event) => {
 				// event.preventDefault();
-				setActive(link.link);
+				// setActive(link.link);
 				toggle(); // Close the menu when a link is clicked
 			}}>
 			{link.label}
