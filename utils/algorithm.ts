@@ -6,7 +6,7 @@ import { simpleSchedule } from "./sampleSchedules/simpleSchedule";
 // Type for Final Schedule
 interface Schedule {
 	[date: string]: {
-		[time: string]: number[];
+		[time: string]: string[];
 	};
 }
 
@@ -105,4 +105,45 @@ const getBoothTimes = () => {
 	);
 };
 
-export default getBoothTimes;
+const getDayRarity = (stuAvail: string[][]) => {
+	let dayRarityObj = {
+		"10:00-11:00": 0,
+		"11:00-12:00": 0,
+		"12:00-13:00": 0,
+		"13:00-14:00": 0,
+		"14:00-15:30": 0,
+	};
+
+	let dayRarity = {
+		Monday: dayRarityObj,
+		Tuesday: dayRarityObj,
+		Wednesday: dayRarityObj,
+		Thursday: dayRarityObj,
+		Friday: dayRarityObj,
+	};
+
+	return dayRarity;
+};
+
+const generateSchedule = (stuAvail: string[][]) => {
+	let timeStampObj = {
+		"10:00-11:00": [],
+		"11:00-12:00": [],
+		"12:00-13:00": [],
+		"13:00-14:00": [],
+		"14:00-15:30": [],
+	};
+
+	let finalSchedule: Schedule = {
+		Monday: timeStampObj,
+		Tuesday: timeStampObj,
+		Wednesday: timeStampObj,
+		Thursday: timeStampObj,
+		Friday: timeStampObj,
+	};
+
+	// Step 1 : Parse through stuAvail and update dayRarity
+	const dayRarity = getDayRarity(stuAvail);
+};
+
+export default generateSchedule;

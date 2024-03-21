@@ -6,8 +6,22 @@
 	border-radius: 5px;
 
 	padding: 2rem;
+
+	margin-bottom: 5rem;
 }
 
 .generateBtn {
 	margin-top: 1rem;
+}
+
+.gridCol {
+	text-align: center;
+
+	border: rem(1px) solid
+		light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.grid {
+	margin-top: 2rem;
+	max-width: 90rem;
 }
