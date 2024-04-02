@@ -33,7 +33,7 @@ export default function BoothingPage() {
 			Papa.parse(file, {
 				complete: function (results: ParseResult<string[]>) {
 					setParseObj(results.data);
-					generateSchedule(parseObj);
+					generateSchedule(results.data); // Passing results of PARSED csv into our algorithm.ts function!
 				},
 			});
 		}
@@ -58,7 +58,7 @@ export default function BoothingPage() {
 			{/* prettier-ignore */}
 			<div>
 				<Title size="h1">Data Received</Title>
-				<Grid classNames={{root: css.grid}} columns={8} >
+				<Grid classNames={{root: css.grid}} columns={7} >
 					{parseObj.map((row, rowIndex) =>
 						row.map((value, valIndex) => <Grid.Col key={rowIndex+valIndex}className={css.gridCol} span={1}>{value}</Grid.Col>)
 					)}
