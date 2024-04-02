@@ -6,8 +6,6 @@
 **/
 
 import { AvailableTimesType, RarityObjectType } from "./algorithmTypes";
-import { schedule1 } from "./sampleSchedules/schedule1";
-import { simpleSchedule } from "./sampleSchedules/simpleSchedule";
 
 // Type for Final Schedule
 interface Schedule {
@@ -15,41 +13,6 @@ interface Schedule {
 		[time: string]: string[];
 	};
 }
-
-// Initialization of the final schedule
-let finalSchedule: Schedule = {
-	"3/28": {
-		"10:00-11:00": [],
-		"11:00-12:00": [],
-		"12:00-13:00": [],
-		"13:00-14:00": [],
-		"14:00-15:30": [],
-	},
-	"3/29": {
-		"10:00-11:00": ["Bob Ho", "Samatha Jones"],
-		"11:00-12:00": [],
-		"12:00-13:00": [],
-		"14:00-15:30": [],
-	},
-	"3/30": {
-		"10:00-11:00": [],
-		"11:00-12:00": [],
-		"12:00-13:00": [],
-		"14:00-15:30": [],
-	},
-	"3/31": {
-		"10:00-11:00": [],
-		"11:00-12:00": [],
-		"12:00-13:00": [],
-		"14:00-15:30": [],
-	},
-	"4/1": {
-		"10:00-11:00": [],
-		"11:00-12:00": [],
-		"12:00-13:00": [],
-		"14:00-15:30": [],
-	},
-};
 
 /**
  * This function performs the following :
@@ -171,7 +134,6 @@ const sortStudents = ({ availableTimes, rarities, }: {
 		availableTimes.shift();
 	}
 
-	console.log(rarities)
 	// 3. Sort each student's availability list by their rarity
 	// prettier-ignore
 	for (let studentIndex = 0; studentIndex < availableTimes.length; studentIndex++) {
@@ -186,11 +148,6 @@ const sortStudents = ({ availableTimes, rarities, }: {
 		})
  
 	}
-
-	// console.log(rarities)
-	// console.log(availableTimes)
-
-	// return sortedStudents;
 };
 
 const generateSchedule = (stuCSV: string[][]) => {
