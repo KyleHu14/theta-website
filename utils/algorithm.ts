@@ -5,15 +5,14 @@
 
 **/
 
-import { AvailableTimesType, RarityObjectType } from "./algorithmTypes";
+import {
+	AvailableTimesType,
+	RarityObjectType,
+	finalScheduleType,
+	stuType,
+} from "./algorithmTypes";
 
-// Type for Final Schedule
-interface Schedule {
-	[date: string]: {
-		[time: string]: string[];
-	};
-}
-
+//prettier-ignore
 /**
  * This function performs the following :
  * 1. Calculate the rarities of each day
@@ -27,7 +26,7 @@ interface Schedule {
 const processSchedule = (stuCSV: string[][]) => {
 	// [Variable Initialization]
 	// 1. availableTimes represents an object with students, each student key points to a list of available times
-	let availableTimes: AvailableTimesType = {};
+	let availableTimes: stuType[] = [];
 
 	// 2. Rarities represents an object that holds how rare every time in a particular day is
 	// 2.1 For example : {
@@ -47,7 +46,8 @@ const processSchedule = (stuCSV: string[][]) => {
 		// 1. Getting student's name first
 		// 2. Initializing their available times list as empty
 		let stuName = stuCSV[row][1];
-		availableTimes[stuName] = [];
+
+		availableTimes.push({ name: stuName, freeTimes: [] });
 
 		// Now let's loop through stuName's available times
 		for (let col = 2; col < stuCSV[row].length; col++) {
@@ -59,10 +59,10 @@ const processSchedule = (stuCSV: string[][]) => {
 
 				// 2. Transform "11am-12pm, 12-1pm" into ["Wednesday 11am-12pm", "Thursday 12pm-1pm"] using reformatTimes
 				// 2.1 ADD it to the student's available times list
-				availableTimes[stuName] = availableTimes[stuName].concat(
+
+				availableTimes[availableTimes.length - 1].freeTimes = availableTimes[availableTimes.length - 1].freeTimes.concat(
 					reformatTimes(stuCSV[0][col], timesList)
 				);
-
 				// 3. Update the rarities object
 				updateRarities(
 					// Once again, remove all white space
@@ -77,7 +77,7 @@ const processSchedule = (stuCSV: string[][]) => {
 	return {
 		// Note that we are transforming availableTimes into a list of lists because we care about order
 		// An example of an entry would be ["Bob Ho", ["Thursday 11am-12pm"]]
-		availableTimes: Object.entries(availableTimes),
+		availableTimes: availableTimes,
 		rarities: rarities,
 	};
 };
@@ -118,19 +118,23 @@ const updateRarities = (
 	}
 };
 
-// Returns an array of objects sorted by increasing availability
 // prettier-ignore
+/**
+ * Sorts each student's available time based on how rare their available time slots are
+ * @param availableTimes - A list of lists (tuples) that contains the available time slots of each student
+ * @param rarities - An object that holds the rarity of each time slot, the lower the number the more rare it is
+ */
 const sortStudents = ({ availableTimes, rarities, }: {
-	availableTimes: [string, string[]][];
+	availableTimes: stuType[];
 	rarities: RarityObjectType;
 }) => {
 	// 1. Sort students by the number of times they are available
 	availableTimes.sort(
-		([, listA], [, listB]) => listA.length - listB.length
+		(stuA, stuB) => stuA.freeTimes.length- stuB.freeTimes.length
 	);
 
 	// 2. Remove any students that have NO availabilities
-	while (availableTimes[0][1].length === 0) {
+	while (availableTimes[0].freeTimes.length === 0) {
 		availableTimes.shift();
 	}
 
@@ -139,34 +143,46 @@ const sortStudents = ({ availableTimes, rarities, }: {
 	for (let studentIndex = 0; studentIndex < availableTimes.length; studentIndex++) {
 		// Sort the available times by their "rarity" in increasing order
 
-		availableTimes[studentIndex][1].sort(function(time1, time2) {
+		availableTimes[studentIndex].freeTimes.sort(function(time1, time2) {
 			// For each "Monday 11am-12pm", split it so that it becomes ["Monday", "11am-12pm"]
 			let [t1Day, ...t1Time] = time1.split(" ").filter(i => i) 
 			let [t2Day, ...t2Time] = time2.split(" ").filter(i => i)
 
+			// We do this weird syntax here since t1/t2 time are actually lists in the case we have times like "11am-12pm (cleaning)", so we need to join them back into 1 string for it to work as a key
 			return rarities[t1Day][t1Time.join(" ")] - rarities[t2Day][t2Time.join(" ")];
 		})
  
 	}
+
+};
+
+//prettier-ignore
+const scheduleStudents = ({ availableTimes, rarities, }: {
+	availableTimes: stuType[];
+	rarities: RarityObjectType;
+}) => {
+	let finalSchedule: finalScheduleType = {}
+
+	// Loop through every student
+	for (let studentIndex = 0; studentIndex < availableTimes.length; studentIndex++) {
+		// For the sake of clarity, initialize a variable and also pre initialize each student's boothing times with an empty list
+		const curStudent = availableTimes[studentIndex]
+		finalSchedule[curStudent.name] = []
+
+		// 1. Give any student that is only available on one day their time
+		if (curStudent.freeTimes.length == 1) {
+			finalSchedule[curStudent.name].push(curStudent.freeTimes[0])
+		}
+		// 2. Otherwise, we will need to give each student their times based on how rare their times are
+		else {
+			
+		}
+	}
+
+	return finalSchedule
 };
 
 const generateSchedule = (stuCSV: string[][]) => {
-	let timeStampObj = {
-		"10:00-11:00": [],
-		"11:00-12:00": [],
-		"12:00-13:00": [],
-		"13:00-14:00": [],
-		"14:00-15:30": [],
-	};
-
-	let finalSchedule: Schedule = {
-		Monday: timeStampObj,
-		Tuesday: timeStampObj,
-		Wednesday: timeStampObj,
-		Thursday: timeStampObj,
-		Friday: timeStampObj,
-	};
-
 	// Task 1 :
 	// 1. Go through the entire "stuAvail" 2D array parse thru it
 	// 2. Generate the rarities of times of each day
@@ -188,7 +204,10 @@ const generateSchedule = (stuCSV: string[][]) => {
 	// Step 2 : processedData now has the processed data, let's sort each student by the number of times they are available
 	sortStudents(processedData);
 
-	console.log(processedData);
+	// Step 3 : We can now schedule the students properly
+	const finalSchedule = scheduleStudents(processedData);
+
+	console.log(finalSchedule);
 };
 
 export default generateSchedule;
