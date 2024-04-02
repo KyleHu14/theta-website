@@ -5,7 +5,7 @@
 
 **/
 
-import { availTimes } from "./algorithmTypes";
+import { AvailableTimesType, RarityObjectType } from "./algorithmTypes";
 import { schedule1 } from "./sampleSchedules/schedule1";
 import { simpleSchedule } from "./sampleSchedules/simpleSchedule";
 
@@ -125,10 +125,20 @@ const getBoothTimes = () => {
  * @returns
  */
 const processSchedule = (stuCSV: string[][]) => {
-	// availableTimes represents an object with students, each student key points to a list of available times
-	let availableTimes: availTimes = {};
+	// [Variable Initialization]
+	// 1. availableTimes represents an object with students, each student key points to a list of available times
+	let availableTimes: AvailableTimesType = {};
 
-	// Why is row = 1? Row 1 represents the column titles, we can skip this
+	// 2. Rarities represents an object that holds how rare every time in a particular day is
+	// 2.1 For example : {
+	//		Monday : {"10-11am" : 5, "11am-12pm" : 10}
+	// }
+	let rarities: RarityObjectType = {}
+	for (let col = 2; col < stuCSV[0].length; col++){
+		rarities[stuCSV[0][col]] = {}
+	}
+
+	// Why is row = 1? Row 0 represents the column titles, we can skip this
 	// Why is col = 2? Col 0 are the timestamps which can be skipped, Col 1 are the names which aren't needed when looping
 	for (let row = 1; row < stuCSV.length; row++) {
 
@@ -144,32 +154,55 @@ const processSchedule = (stuCSV: string[][]) => {
 			// 1. First add the available times to the availableTimes obj
 			// 1.1 We need to check that there are available times to add
 			if (stuCSV[row][col] !== "not available") {
+				// We will need a split array of times for example : ["11am-12pm", "12-1pm"]
+				const timesList = stuCSV[row][col].split(", ");
+
 				// 2. Transform "11am-12pm, 12-1pm" into ["Wednesday 11am-12pm", "Thursday 12pm-1pm"] using reformatTimes
 				// 2.1 ADD it to the student's available times list
-				availableTimes[stuName] = availableTimes[stuName].concat(reformatTimes(stuCSV[0][col], stuCSV[row][col]));
+				availableTimes[stuName] = availableTimes[stuName].concat(reformatTimes(stuCSV[0][col], timesList));
+
+				// 3. Update the rarities object
+				updateRarities(stuCSV[0][col], timesList, rarities)
 			}
 		}
 	}
 
-	console.log(availableTimes)
+	console.log(rarities)
 
 	return 0;
 };
 /**
+ * [Helper Function for processSchedule] : 
  * Returns a processed array based on the times paramater in the format of [`Monday time1`, `Monday time2`, etc.]
  * @param day - A string that indicates the day associated with the times list
  * @param times - A string in the formmat of "11am-12pm, 12-1pm"
  */
-const reformatTimes = (day: string, times: string) => {
+const reformatTimes = (day: string, times: string[]) => {
 	let finalTimes: string[] = []
 
-	const timesList = times.split(", ")
-
-	for (let timeIndex = 0; timeIndex < timesList.length; timeIndex++ ){
-		finalTimes.push(day + timesList[timeIndex])
+	for (let timeIndex = 0; timeIndex < times.length; timeIndex++ ){
+		finalTimes.push(day + times[timeIndex])
 	}
 
 	return finalTimes
+}
+
+/**
+ * [Helper Function for processSchedule] : 
+ * Updates the rarities object in processSchedule by looping through the times list and incrementing the corresponding counter in rarityObject
+ * @param day - A string that indicates the day associated with the times list
+ * @param times - A string in the formmat of "11am-12pm, 12-1pm"
+ * @param rarityObject - the rarities object in process schedule
+ */
+const updateRarities = (day: string, times: string[], rarityObject: RarityObjectType) => {
+	for (let timeIndex = 0; timeIndex < times.length; timeIndex++){
+		if (times[timeIndex] in rarityObject[day]){
+			rarityObject[day][times[timeIndex]] += 1
+		}
+		else {
+			rarityObject[day][times[timeIndex]] = 1
+		}
+	}
 }
 
 const generateSchedule = (stuCSV: string[][]) => {
