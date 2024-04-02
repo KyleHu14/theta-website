@@ -27,11 +27,13 @@ import generateSchedule from "../../../utils/algorithm";
 export default function BoothingPage() {
 	const [file, setFile] = useState<File | null>(null);
 	const [parseObj, setParseObj] = useState([[""]]);
+	const [title, setTitle] = useState("Upload a CSV File");
 
 	const handleGenerate = () => {
 		if (file) {
 			Papa.parse(file, {
 				complete: function (results: ParseResult<string[]>) {
+					setTitle("CSV Data");
 					setParseObj(results.data);
 					generateSchedule(results.data); // Passing results of PARSED csv into our algorithm.ts function!
 				},
@@ -57,12 +59,15 @@ export default function BoothingPage() {
 
 			{/* prettier-ignore */}
 			<div>
-				<Title size="h1">Data Received</Title>
-				<Grid classNames={{root: css.grid}} columns={7} >
-					{parseObj.map((row, rowIndex) =>
-						row.map((value, valIndex) => <Grid.Col key={rowIndex+valIndex}className={css.gridCol} span={1}>{value}</Grid.Col>)
-					)}
-				</Grid>
+				<Title classNames={{root: css.title}}size="h1">{title}</Title>
+				{parseObj.length > 1 && (
+					<Grid classNames={{root: css.grid}} columns={7} >
+						{parseObj.map((row, rowIndex) =>
+							row.map((value, valIndex) => <Grid.Col key={rowIndex+valIndex}className={css.gridCol} span={1}>{value}</Grid.Col>)
+						)}
+					</Grid>
+				)}
+				
 			</div>
 		</Flex>
 	);
