@@ -3,11 +3,10 @@
 // Mantine
 import {
 	Button,
-	Center,
 	FileInput,
 	Flex,
 	Grid,
-	SimpleGrid,
+	NumberInput,
 	Title,
 } from "@mantine/core";
 
@@ -25,9 +24,15 @@ import { ParseResult } from "papaparse";
 import generateSchedule from "../../../utils/algorithm";
 
 export default function BoothingPage() {
+	// useStates for files & parsing
 	const [file, setFile] = useState<File | null>(null);
 	const [parseObj, setParseObj] = useState([[""]]);
+
+	// Titles
 	const [title, setTitle] = useState("Upload a CSV File");
+
+	// Minimum # of students
+	const [minStudents, setMinStudents] = useState<number>(5);
 
 	const handleGenerate = () => {
 		if (file) {
@@ -35,7 +40,7 @@ export default function BoothingPage() {
 				complete: function (results: ParseResult<string[]>) {
 					setTitle("CSV Data");
 					setParseObj(results.data);
-					generateSchedule(results.data); // Passing results of PARSED csv into our algorithm.ts function!
+					generateSchedule(results.data, minStudents); // Passing results of PARSED csv into our algorithm.ts function!
 				},
 			});
 		}
@@ -52,7 +57,15 @@ export default function BoothingPage() {
 					onChange={setFile}
 				/>
 
-				<Button className={css.generateBtn} onClick={handleGenerate}>
+				<NumberInput
+					classNames={{ root: css.mTop }}
+					label="Minimum # of People per Time Slot"
+					description="Input any digit, default is 5"
+					value={minStudents}
+					onChange={(value) => setMinStudents(Number(value))}
+				/>
+
+				<Button className={css.mTop} onClick={handleGenerate}>
 					Generate Schedule
 				</Button>
 			</div>
