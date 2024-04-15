@@ -1,7 +1,3 @@
-export type AvailableTimesType = {
-	[key: string]: string[];
-};
-
 export type RarityObjectType = {
 	[key: string]: DayRarity;
 };
@@ -17,4 +13,9 @@ export type stuType = {
 
 export type finalScheduleType = {
 	[key: string]: string[];
+};
+
+export type processedDataType = {
+	availableTimes: stuType[];
+	rarities: RarityObjectType;
 };

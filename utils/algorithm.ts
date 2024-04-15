@@ -6,11 +6,12 @@
 **/
 
 import {
-	AvailableTimesType,
 	RarityObjectType,
 	finalScheduleType,
+	processedDataType,
 	stuType,
 } from "./algorithmTypes";
+
 
 //prettier-ignore
 /**
@@ -53,7 +54,7 @@ const processSchedule = (stuCSV: string[][]) => {
 		for (let col = 2; col < stuCSV[row].length; col++) {
 			// 1. First add the available times to the availableTimes obj
 			// 1.1 We need to check that there are available times to add
-			if (stuCSV[row][col] !== "not available") {
+			if (stuCSV[row][col] !== "") {
 				// We will need a split array of times for example : ["11am-12pm", "12-1pm"]
 				const timesList = stuCSV[row][col].split(", ");
 
@@ -134,7 +135,7 @@ const sortStudents = ({ availableTimes, rarities, }: {
 
 	// 2. Remove any students that have NO availabilities
 	while (availableTimes[0].freeTimes.length === 0) {
-		availableTimes.shift();
+		availableTimes.shift()
 	}
 
 	// 3. Sort each student's availability list by their rarity
@@ -148,7 +149,7 @@ const sortStudents = ({ availableTimes, rarities, }: {
 			let [t2Day, ...t2Time] = time2.split(" ").filter(i => i)
 
 			// We do this weird syntax here since t1/t2 time are actually lists in the case we have times like "11am-12pm (cleaning)", so we need to join them back into 1 string for it to work as a key
-			return rarities[t1Day][t1Time.join(" ")] - rarities[t2Day][t2Time.join(" ")];
+			return rarities[t1Day][t1Time.join(" ")] - rarities[t2Day][t2Time.join(" ")]
 		})
  
 	}
@@ -161,22 +162,41 @@ const sortStudents = ({ availableTimes, rarities, }: {
  * @param student - A string that represents the name of a student
  * @param finalSchedule - The final object that will be returned, keys represents time in the format "Monday 11am-12pm", whereas values are lists with students
  */
-const pushSchedule = (time:string, student: string, finalSchedule: finalScheduleType) => {
-	// If the time is in the finalSchedule object, we can just push the student
-	if (time in finalSchedule) {
-		finalSchedule[time].push(student)
+const pushSchedule = (times:string[], student: string, finalSchedule: finalScheduleType, processedData: processedDataType) => {
+	let timeStr = "";
+	
+	timeStr = times[0]
+	
+	// Destructure times..
+	let [day, timeRange] = times[0].trim().split(" ").filter(i => i)
+
+	// Edit the processedData object
+
+
+	// Resort the student's times array to reflect the updated rarities
+	sortStudents(processedData)
+
+	// If the time string is in the finalSchedule object, we can just push the student
+	if (timeStr in finalSchedule) {
+		finalSchedule[timeStr].push(student)
+
+		// The only place where we need to check if an array is len of 5
+
 	}
 	// Otherwise, we need to initialize a list with the student
 	else {
-		finalSchedule[time] = [student]
+		finalSchedule[timeStr] = [student]
 	}
 }
 
 //prettier-ignore
 const scheduleStudents = (
-	{ availableTimes, rarities, }: { availableTimes: stuType[]; rarities: RarityObjectType; }, 
+	processedData: processedDataType,
 	minStudents: number
 ) => {
+	let availableTimes = processedData.availableTimes
+	let rarities = processedData.rarities
+
 	let finalSchedule: finalScheduleType = {}
 
 	// Loop through every student
@@ -185,13 +205,7 @@ const scheduleStudents = (
 		const curStudent = availableTimes[studentIndex]
 
 		// 1. Give any student that is only available on one day their time
-		if (curStudent.freeTimes.length == 1) {
-			pushSchedule(curStudent.freeTimes[0], curStudent.name, finalSchedule)
-		}
-		// 2. Otherwise, we will need to give each student their times based on how rare their times are
-		else {
-			
-		}
+		pushSchedule(curStudent.freeTimes, curStudent.name, finalSchedule, processedData)
 	}
 
 	return finalSchedule
@@ -214,15 +228,16 @@ const generateSchedule = (stuCSV: string[][], minStudents:number) => {
 	**/
 
 	// Step 1 : Parse through stuAvail, calculate rarities of each day
-	const processedData = processSchedule(stuCSV);
+	const processedData = processSchedule(stuCSV)
 
 	// Step 2 : processedData now has the processed data, let's sort each student by the number of times they are available
-	sortStudents(processedData);
+	sortStudents(processedData)
 
 	// Step 3 : We can now schedule the students properly
-	const finalSchedule = scheduleStudents(processedData, minStudents);
+	const finalSchedule = scheduleStudents(processedData, minStudents)
 
-	console.log(finalSchedule);
+	console.log(finalSchedule)
+	console.log(processedData)
 };
 
 export default generateSchedule;
