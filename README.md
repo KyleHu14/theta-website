@@ -6,6 +6,8 @@ Directions to run :
 
 1. cd into the theta-website directory
 2. type npm run dev
+3. navigate to localhost:3000/boothing
+4. right click -> inspect -> console
 
 # Usage
 
