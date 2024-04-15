@@ -134,10 +134,9 @@ const sortStudents = ({ availableTimes, rarities, }: {
 	);
 
 	// 2. Remove any students that have NO availabilities
-    // Nina's Suggestion : "No need to remove a student with no times"
-	// while (availableTimes[0].freeTimes.length === 0) {
-	// 	availableTimes.shift()
-	// }
+	while (availableTimes[0].freeTimes.length === 0) {
+		availableTimes.shift()
+	}
 
 	// 3. Sort each student's availability list by their rarity
 	// prettier-ignore
@@ -164,49 +163,30 @@ const sortStudents = ({ availableTimes, rarities, }: {
  * @param finalSchedule - The final object that will be returned, keys represents time in the format "Monday 11am-12pm", whereas values are lists with students
  */
 const pushSchedule = (times:string[], student: string, finalSchedule: finalScheduleType, processedData: processedDataType) => {
-	// At this point, we will make the  assumption that times[0]'s slot in final schedule is not maxxed
-	const maxStudents = 4
-
-    if (times.length > 0) {
-        // Destructure times..
-        let [day, timeRange] = times[0].trim().split(" ").filter(i => i)
-
-        // Edit the processedData object
-        processedData.rarities[day][timeRange] -= 1
-
-        // If the time string is in the finalSchedule object, we can just push the student
-        if (times[0] in finalSchedule) {
-            // The only place where we need to check if an array is len of 5
-            if (finalSchedule[times[0]].length === maxStudents) {
-                // Go thru all students and remove this current time since its maxxed
-                for (let i = 0; i < processedData.availableTimes.length; i++) {
-                    // For student i, remove all traces of time[0]
-                    let index = processedData.availableTimes[i].freeTimes.indexOf(times[0])
-                    if (index !== -1) {
-                        processedData.availableTimes[i].freeTimes.splice(index, 1)
-                    }
-                    
-                }
-            } else {
-                finalSchedule[times[0]].push(student)
-            }
-        }
-        // Otherwise, we need to initialize a list with the student
-        else {
-            finalSchedule[times[0]] = [student]
-        }
-
-    } 
-    else {
-        console.log(`Empty Times ${student}`)
-    }
+	let timeStr = "";
 	
-    // Remove the student that we just assigned a time
-    const removeStuIndex = processedData.availableTimes.findIndex(obj => obj.name === student);
-    processedData.availableTimes.splice(removeStuIndex, 1);
+	timeStr = times[0]
+	
+	// Destructure times..
+	let [day, timeRange] = times[0].trim().split(" ").filter(i => i)
 
-    // Resort the student's times array to reflect the updated rarities
+	// Edit the processedData object
+
+
+	// Resort the student's times array to reflect the updated rarities
 	sortStudents(processedData)
+
+	// If the time string is in the finalSchedule object, we can just push the student
+	if (timeStr in finalSchedule) {
+		finalSchedule[timeStr].push(student)
+
+		// The only place where we need to check if an array is len of 5
+
+	}
+	// Otherwise, we need to initialize a list with the student
+	else {
+		finalSchedule[timeStr] = [student]
+	}
 }
 
 //prettier-ignore
@@ -214,21 +194,19 @@ const scheduleStudents = (
 	processedData: processedDataType,
 	minStudents: number
 ) => {
-	// let availableTimes = processedData.availableTimes
+	let availableTimes = processedData.availableTimes
 	let rarities = processedData.rarities
 
 	let finalSchedule: finalScheduleType = {}
 
-
-    let moe = 0 
 	// Loop through every student
-    while (processedData.availableTimes.length > 0 && moe < 73) {
-        let firstStu = processedData.availableTimes[0];
-        pushSchedule(firstStu.freeTimes, firstStu.name, finalSchedule, processedData)
+	for (let studentIndex = 0; studentIndex < availableTimes.length; studentIndex++) {
+		// For the sake of clarity, initialize a variable and also pre initialize each student's boothing times with an empty list
+		const curStudent = availableTimes[studentIndex]
 
-        moe += 1
-    }
-    // console.log(processedData)
+		// 1. Give any student that is only available on one day their time
+		pushSchedule(curStudent.freeTimes, curStudent.name, finalSchedule, processedData)
+	}
 
 	return finalSchedule
 };

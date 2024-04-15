@@ -74,7 +74,7 @@ export default function BoothingPage() {
 			<div>
 				<Title classNames={{root: css.title}}size="h1">{title}</Title>
 				{parseObj.length > 1 && (
-					<Grid classNames={{root: css.grid}} columns={7} >
+					<Grid classNames={{root: css.grid}} columns={6} >
 						{parseObj.map((row, rowIndex) =>
 							row.map((value, valIndex) => <Grid.Col key={rowIndex+valIndex}className={css.gridCol} span={1}>{value}</Grid.Col>)
 						)}
