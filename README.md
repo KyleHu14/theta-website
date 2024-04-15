@@ -2,6 +2,11 @@
 
 This website serves as a tool for the Kappa Alpha Theta sorority at UCI. The website is built with NextJS, MantineUI, and TypeScript.
 
+Directions to run :
+
+1. cd into the theta-website directory
+2. type npm run dev
+
 # Usage
 
 ## Schedule Generator
