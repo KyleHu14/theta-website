@@ -1,10 +1,3 @@
-/* Problems that aren't solved 
-1. What is the format of the final schedule we are returning? (Maybe CSV?)
-2. What is the format of the schedule returned in getBoothTimes? [DONE]
-3.  
-
-**/
-
 import {
 	RarityObjectType,
 	finalScheduleType,
@@ -12,75 +5,6 @@ import {
 	stuType,
 } from "./algorithmTypes";
 
-
-//prettier-ignore
-/**
- * This function performs the following :
- * 1. Calculate the rarities of each day
- * 2. Generate an object of each student and their available days
- * 3. Find the unique days
- * 4. Find the unique times
- *
- * @param stuAvail - A 2D list of the CSV file, where row 0 represents the column titles and data actually starts at row 1, col 0 represents time stamps
- * @returns
- */
-const processSchedule = (stuCSV: string[][]) => {
-	// [Variable Initialization]
-	// 1. availableTimes represents an object with students, each student key points to a list of available times
-	let availableTimes: stuType[] = [];
-
-	// 2. Rarities represents an object that holds how rare every time in a particular day is
-	// 2.1 For example : {
-	//		Monday : {"10-11am" : 5, "11am-12pm" : 10}
-	// }
-	let rarities: RarityObjectType = {};
-	// 2.2 Initialize each day ("Monday", "Tuesday", "Wednesday") as an empty object
-	for (let col = 2; col < stuCSV[0].length; col++) {
-		// Remove all whitespace from an the day
-		rarities[stuCSV[0][col].replace(/\s+/g, "")] = {};
-	}
-
-	// Why is row = 1? Row 0 represents the column titles, we can skip this
-	// Why is col = 2? Col 0 are the timestamps which can be skipped, Col 1 are the names which aren't needed when looping
-	for (let row = 1; row < stuCSV.length; row++) {
-		// Perform pre initialization by
-		// 1. Getting student's name first
-		// 2. Initializing their available times list as empty
-		let stuName = stuCSV[row][1];
-
-		availableTimes.push({ name: stuName, freeTimes: [] });
-
-		// Now let's loop through stuName's available times
-		for (let col = 2; col < stuCSV[row].length; col++) {
-			// 1. First add the available times to the availableTimes obj
-			// 1.1 We need to check that there are available times to add
-			if (stuCSV[row][col] !== "") {
-				// We will need a split array of times for example : ["11am-12pm", "12-1pm"]
-				const timesList = stuCSV[row][col].split(", ");
-
-				// 2. Transform "11am-12pm, 12-1pm" into ["Wednesday 11am-12pm", "Thursday 12pm-1pm"] using reformatTimes
-				// 2.1 ADD it to the student's available times list
-				availableTimes[availableTimes.length - 1].freeTimes = availableTimes[availableTimes.length - 1].freeTimes.concat(
-					reformatTimes(stuCSV[0][col], timesList)
-				);
-				// 3. Update the rarities object
-				updateRarities(
-					// Once again, remove all white space
-					stuCSV[0][col].replace(/\s+/g, ""),
-					timesList,
-					rarities
-				);
-			}
-		}
-	}
-
-	return {
-		// Note that we are transforming availableTimes into a list of lists because we care about order
-		// An example of an entry would be ["Bob Ho", ["Thursday 11am-12pm"]]
-		availableTimes: availableTimes,
-		rarities: rarities,
-	};
-};
 /**
  * [Helper Function for processSchedule] :
  * Returns a processed array based on the times paramater in the format of [`Monday time1`, `Monday time2`, etc.]
@@ -118,6 +42,65 @@ const updateRarities = (
 	}
 };
 
+
+//prettier-ignore
+/**
+ * This function performs the following :
+ * 1. Calculate the rarities of each day
+ * 2. Generate an object of each student and their available days
+ * 3. Find the unique days
+ * 4. Find the unique times
+ *
+ * @param stuAvail - A 2D list of the CSV file, where row 0 represents the column titles and data actually starts at row 1, col 0 represents time stamps
+ * @returns
+ */
+const processSchedule = (stuCSV: string[][]) => {
+	// 1. availableTimes represents an object with students, each student key points to a list of available times
+	let availableTimes: stuType[] = [];
+
+	// 2. Rarities represents an object that holds how rare every time in a particular day is
+	// 2.1 For example : {
+	//		Monday : {"10-11am" : 5, "11am-12pm" : 10}
+	// }
+	let rarities: RarityObjectType = {};
+	
+	// 2.2 Initialize each day ("Monday", "Tuesday", "Wednesday") as an empty object
+	for (let col = 2; col < stuCSV[0].length; col++) {
+		// Remove all whitespace from an the day using regex
+		rarities[stuCSV[0][col].replace(/\s+/g, "")] = {};
+	}
+
+	// Why is row = 1? Row 0 represents are column titles (Name, Timestamp, Monday, etc.), we can skip this
+	// Why is col = 2? Col 0 are the timestamps which can be skipped, Col 1 are the names which aren't needed when looping
+
+	// 3. Loop through CSV and init availableTimes
+	for (let row = 1; row < stuCSV.length; row++) {
+		// 1. Init a stuObj that saves name & freeTimes of a student
+		let stuObj: stuType = { name: stuCSV[row][1], freeTimes: [] }
+
+		// 2. Loop through student's available times by checking their days (cols)
+		for (let col = 2; col < stuCSV[row].length; col++) {
+			// 1. Check student is free on the current day (col)
+			if (stuCSV[row][col] !== "") {
+				// 1. Time is in str format : "11am-12pm, 12pm-1pm", need to split
+				const timesList = stuCSV[row][col].split(", ");
+
+				// 2. Transform "Wednesday" & ["11am-12pm", "12pm-1pm"] to ["Wednesday 11am-12pm", "Wednesday 12pm-1pm"]
+				stuObj.freeTimes = stuObj.freeTimes.concat(reformatTimes(stuCSV[0][col], timesList))
+				
+				// 3. Increment the occurence of all times in timesList on the particular day
+				updateRarities(stuCSV[0][col].replace(/\s+/g, ""), timesList, rarities)
+			}
+		}
+
+		// 3. After processing all student times, add to availableTimes list
+		availableTimes.push(stuObj);
+	}
+
+	// 4. Return everything as an object
+	return { availableTimes: availableTimes, rarities: rarities }
+}
+
 // prettier-ignore
 /**
  * Sorts each student's available time based on how rare their available time slots are
@@ -133,12 +116,6 @@ const sortStudents = ({ availableTimes, rarities, }: {
 		(stuA, stuB) => stuA.freeTimes.length- stuB.freeTimes.length
 	);
 
-	// 2. Remove any students that have NO availabilities
-    // Nina's Suggestion : "No need to remove a student with no times"
-	// while (availableTimes[0].freeTimes.length === 0) {
-	// 	availableTimes.shift()
-	// }
-
 	// 3. Sort each student's availability list by their rarity
 	// prettier-ignore
 	for (let studentIndex = 0; studentIndex < availableTimes.length; studentIndex++) {
@@ -152,9 +129,7 @@ const sortStudents = ({ availableTimes, rarities, }: {
 			// We do this weird syntax here since t1/t2 time are actually lists in the case we have times like "11am-12pm (cleaning)", so we need to join them back into 1 string for it to work as a key
 			return rarities[t1Day][t1Time.join(" ")] - rarities[t2Day][t2Time.join(" ")]
 		})
- 
 	}
-
 };
 
 /**
@@ -185,7 +160,6 @@ const pushSchedule = (times:string[], student: string, finalSchedule: finalSched
                     if (index !== -1) {
                         processedData.availableTimes[i].freeTimes.splice(index, 1)
                     }
-                    
                 }
             } else {
                 finalSchedule[times[0]].push(student)
@@ -220,35 +194,16 @@ const scheduleStudents = (
 	let finalSchedule: finalScheduleType = {}
 
 
-    let moe = 0 
 	// Loop through every student
-    while (processedData.availableTimes.length > 0 && moe < 73) {
+    while (processedData.availableTimes.length > 0) {
         let firstStu = processedData.availableTimes[0];
         pushSchedule(firstStu.freeTimes, firstStu.name, finalSchedule, processedData)
-
-        moe += 1
     }
-    // console.log(processedData)
 
 	return finalSchedule
 };
 
 const generateSchedule = (stuCSV: string[][], minStudents:number) => {
-	// Task 1 :
-	// 1. Go through the entire "stuAvail" 2D array parse thru it
-	// 2. Generate the rarities of times of each day
-
-	/* 
-		Task 2 : 
-	 	1. Make the final output array to have this format :
-	 	[
-			("Monday 10-11" : ["Bob Ho", "Tim Chou"]), 
-			("Monday 11-12" : ["Bob Ho", "Tim Chou"]),
-			("Tuesday 10-11" : ["Bob Moe", "Tim Joe"]),
-			....
-		]
-	**/
-
 	// Step 1 : Parse through stuAvail, calculate rarities of each day
 	const processedData = processSchedule(stuCSV)
 
