@@ -55,32 +55,34 @@ const updateRarities = (
  * @returns
  */
 const processSchedule = (stuCSV: string[][]) => {
-	// 1. availableTimes represents an object with students, each student key points to a list of available times
-	let availableTimes: stuType[] = [];
+	// 1. students : object with student key that points to list of available times
+	let students: stuType[] = [];
 
-	// 2. Rarities represents an object that holds how rare every time in a particular day is
-	// 2.1 For example : {
-	//		Monday : {"10-11am" : 5, "11am-12pm" : 10}
-	// }
+	/** 
+		2.  rarities : object that holds how rare every time in a particular day is
+			For example : {
+				Monday : {"10-11am" : 5, "11am-12pm" : 10}
+			}
+	*/
 	let rarities: RarityObjectType = {};
 	
-	// 2.2 Initialize each day ("Monday", "Tuesday", "Wednesday") as an empty object
+	// Initialize each day as an object, rarities["Monday"] = {}
 	for (let col = 2; col < stuCSV[0].length; col++) {
-		// Remove all whitespace from an the day using regex
+		// Remove whitespace w regex
 		rarities[stuCSV[0][col].replace(/\s+/g, "")] = {};
 	}
 
 	// Why is row = 1? Row 0 represents are column titles (Name, Timestamp, Monday, etc.), we can skip this
 	// Why is col = 2? Col 0 are the timestamps which can be skipped, Col 1 are the names which aren't needed when looping
 
-	// 3. Loop through CSV and init availableTimes
+	// 3. Loop through CSV, init a stuObj, append stuObj to students
 	for (let row = 1; row < stuCSV.length; row++) {
 		// 1. Init a stuObj that saves name & freeTimes of a student
 		let stuObj: stuType = { name: stuCSV[row][1], freeTimes: [] }
 
 		// 2. Loop through student's available times by checking their days (cols)
 		for (let col = 2; col < stuCSV[row].length; col++) {
-			// 1. Check student is free on the current day (col)
+			// 1. Check if student has available times
 			if (stuCSV[row][col] !== "") {
 				// 1. Time is in str format : "11am-12pm, 12pm-1pm", need to split
 				const timesList = stuCSV[row][col].split(", ");
@@ -93,40 +95,40 @@ const processSchedule = (stuCSV: string[][]) => {
 			}
 		}
 
-		// 3. After processing all student times, add to availableTimes list
-		availableTimes.push(stuObj);
+		// 3. After processing all student times, add to students list
+		students.push(stuObj);
 	}
 
 	// 4. Return everything as an object
-	return { availableTimes: availableTimes, rarities: rarities }
+	return { students: students, rarities: rarities }
 }
 
 // prettier-ignore
 /**
  * Sorts each student's available time based on how rare their available time slots are
- * @param availableTimes - A list of lists (tuples) that contains the available time slots of each student
+ * @param students - A list of lists (tuples) that contains the available time slots of each student
  * @param rarities - An object that holds the rarity of each time slot, the lower the number the more rare it is
  */
-const sortStudents = ({ availableTimes, rarities, }: {
-	availableTimes: stuType[];
+const sortStudents = ({ students, rarities, }: {
+	students: stuType[];
 	rarities: RarityObjectType;
 }) => {
 	// 1. Sort students by the number of times they are available
-	availableTimes.sort(
+	students.sort(
 		(stuA, stuB) => stuA.freeTimes.length- stuB.freeTimes.length
 	);
 
-	// 3. Sort each student's availability list by their rarity
-	// prettier-ignore
-	for (let studentIndex = 0; studentIndex < availableTimes.length; studentIndex++) {
-		// Sort the available times by their "rarity" in increasing order
-
-		availableTimes[studentIndex].freeTimes.sort(function(time1, time2) {
-			// For each "Monday 11am-12pm", split it so that it becomes ["Monday", "11am-12pm"]
+	// 2. Sort students.freeTimes by rarity
+	//    [0] : means time with LEAST amt of ppl who can work at this time
+	for (let studentIndex = 0; studentIndex < students.length; studentIndex++) {
+		// 1. Sort the available times by their "rarity" in increasing order
+		students[studentIndex].freeTimes.sort(function(time1, time2) {
+			// 1. Split "Monday 11am-12pm" so that it becomes ["Monday", "11am-12pm"]
 			let [t1Day, ...t1Time] = time1.split(" ").filter(i => i) 
 			let [t2Day, ...t2Time] = time2.split(" ").filter(i => i)
 
-			// We do this weird syntax here since t1/t2 time are actually lists in the case we have times like "11am-12pm (cleaning)", so we need to join them back into 1 string for it to work as a key
+			// 2. Return rarities of t1Day at t1Time - rarities of t2Day at t2Time
+			//    t1Time.join(" ")
 			return rarities[t1Day][t1Time.join(" ")] - rarities[t2Day][t2Time.join(" ")]
 		})
 	}
@@ -138,66 +140,60 @@ const sortStudents = ({ availableTimes, rarities, }: {
  * @param student - A string that represents the name of a student
  * @param finalSchedule - The final object that will be returned, keys represents time in the format "Monday 11am-12pm", whereas values are lists with students
  */
-const pushSchedule = (times:string[], student: string, finalSchedule: finalScheduleType, processedData: processedDataType) => {
-	// At this point, we will make the  assumption that times[0]'s slot in final schedule is not maxxed
-	const maxStudents = 4
-
-    if (times.length > 0) {
-        // Destructure times..
+const pushSchedule = (times:string[], student: string, finalSchedule: finalScheduleType, processedData: processedDataType, minStudents: number) => {
+    // 1. First check if the student is available
+	if (times.length > 0) {
+        // 1. Destructure times since times = "Monday 11am-12pm"
         let [day, timeRange] = times[0].trim().split(" ").filter(i => i)
 
-        // Edit the processedData object
+        // 2. Update rarities since this student will be added to day at time timeRange
         processedData.rarities[day][timeRange] -= 1
 
-        // If the time string is in the finalSchedule object, we can just push the student
+        // 3. If the time string is in the finalSchedule object, we can just push the student
         if (times[0] in finalSchedule) {
             // The only place where we need to check if an array is len of 5
-            if (finalSchedule[times[0]].length === maxStudents) {
+            if (finalSchedule[times[0]].length === minStudents) {
                 // Go thru all students and remove this current time since its maxxed
-                for (let i = 0; i < processedData.availableTimes.length; i++) {
+                for (let i = 0; i < processedData.students.length; i++) {
                     // For student i, remove all traces of time[0]
-                    let index = processedData.availableTimes[i].freeTimes.indexOf(times[0])
+                    let index = processedData.students[i].freeTimes.indexOf(times[0])
                     if (index !== -1) {
-                        processedData.availableTimes[i].freeTimes.splice(index, 1)
+                        processedData.students[i].freeTimes.splice(index, 1)
                     }
                 }
             } else {
                 finalSchedule[times[0]].push(student)
             }
         }
-        // Otherwise, we need to initialize a list with the student
+        // 4. Otherwise, we need to initialize a list with the student
         else {
             finalSchedule[times[0]] = [student]
         }
 
     } 
+	// 2. We have encountered a student with no availability, this is an edge case
     else {
         console.log(`Empty Times ${student}`)
     }
 	
     // Remove the student that we just assigned a time
-    const removeStuIndex = processedData.availableTimes.findIndex(obj => obj.name === student);
-    processedData.availableTimes.splice(removeStuIndex, 1);
+    const removeStuIndex = processedData.students.findIndex(obj => obj.name === student);
+    processedData.students.splice(removeStuIndex, 1);
 
     // Resort the student's times array to reflect the updated rarities
 	sortStudents(processedData)
 }
 
 //prettier-ignore
-const scheduleStudents = (
-	processedData: processedDataType,
-	minStudents: number
-) => {
-	// let availableTimes = processedData.availableTimes
-	let rarities = processedData.rarities
-
+const scheduleStudents = ( processedData: processedDataType, minStudents: number ) => {
+	// 1. Initialize the final schedule to return
 	let finalSchedule: finalScheduleType = {}
 
 
-	// Loop through every student
-    while (processedData.availableTimes.length > 0) {
-        let firstStu = processedData.availableTimes[0];
-        pushSchedule(firstStu.freeTimes, firstStu.name, finalSchedule, processedData)
+	// 2. While there still students that are available, add them to finalSchedule
+    while (processedData.students.length > 0) {
+        let firstStu = processedData.students[0];
+        pushSchedule(firstStu.freeTimes, firstStu.name, finalSchedule, processedData, minStudents)
     }
 
 	return finalSchedule
@@ -214,7 +210,6 @@ const generateSchedule = (stuCSV: string[][], minStudents:number) => {
 	const finalSchedule = scheduleStudents(processedData, minStudents)
 
 	console.log(finalSchedule)
-	console.log(processedData)
 };
 
 export default generateSchedule;

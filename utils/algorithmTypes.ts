@@ -16,6 +16,6 @@ export type finalScheduleType = {
 };
 
 export type processedDataType = {
-	availableTimes: stuType[];
+	students: stuType[];
 	rarities: RarityObjectType;
 };
