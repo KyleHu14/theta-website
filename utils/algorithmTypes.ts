@@ -6,16 +6,16 @@ type DayRarity = {
 	[key: string]: number;
 };
 
-export type stuType = {
+export type StuType = {
 	name: string;
 	freeTimes: string[];
 };
 
-export type finalScheduleType = {
+export type FinalScheduleType = {
 	[key: string]: string[];
 };
 
-export type processedDataType = {
-	students: stuType[];
+export type ProcessedDataType = {
+	students: StuType[];
 	rarities: RarityObjectType;
 };

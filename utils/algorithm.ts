@@ -1,8 +1,9 @@
+import { preinit } from "react-dom";
 import {
 	RarityObjectType,
-	finalScheduleType,
-	processedDataType,
-	stuType,
+	FinalScheduleType,
+	ProcessedDataType,
+	StuType,
 } from "./algorithmTypes";
 
 /**
@@ -56,7 +57,7 @@ const updateRarities = (
  */
 const processSchedule = (stuCSV: string[][]) => {
 	// 1. students : object with student key that points to list of available times
-	let students: stuType[] = [];
+	let students: StuType[] = [];
 
 	/** 
 		2.  rarities : object that holds how rare every time in a particular day is
@@ -78,7 +79,7 @@ const processSchedule = (stuCSV: string[][]) => {
 	// 3. Loop through CSV, init a stuObj, append stuObj to students
 	for (let row = 1; row < stuCSV.length; row++) {
 		// 1. Init a stuObj that saves name & freeTimes of a student
-		let stuObj: stuType = { name: stuCSV[row][1], freeTimes: [] }
+		let stuObj: StuType = { name: stuCSV[row][1], freeTimes: [] }
 
 		// 2. Loop through student's available times by checking their days (cols)
 		for (let col = 2; col < stuCSV[row].length; col++) {
@@ -110,7 +111,7 @@ const processSchedule = (stuCSV: string[][]) => {
  * @param rarities - An object that holds the rarity of each time slot, the lower the number the more rare it is
  */
 const sortStudents = ({ students, rarities, }: {
-	students: stuType[];
+	students: StuType[];
 	rarities: RarityObjectType;
 }) => {
 	// 1. Sort students by the number of times they are available
@@ -134,66 +135,51 @@ const sortStudents = ({ students, rarities, }: {
 	}
 };
 
-/**
- * [Helper Function for sortStudents] : Adds student to finalSchedule[time]
- * @param time - A string in the format of "Monday 11am-12pm"
- * @param student - A string that represents the name of a student
- * @param finalSchedule - The final object that will be returned, keys represents time in the format "Monday 11am-12pm", whereas values are lists with students
- */
-const pushSchedule = (times:string[], student: string, finalSchedule: finalScheduleType, processedData: processedDataType, minStudents: number) => {
-    // 1. First check if the student is available
-	if (times.length > 0) {
-        // 1. Destructure times since times = "Monday 11am-12pm"
-        let [day, timeRange] = times[0].trim().split(" ").filter(i => i)
+const preInitFinalSchedule = ( rarities: RarityObjectType ) => {
+	let final: FinalScheduleType = {}
 
-        // 2. Update rarities since this student will be added to day at time timeRange
-        processedData.rarities[day][timeRange] -= 1
+	// 1. For each day & all its times, initialize it in the final schedule as an empty list
+	for (const day in rarities) {
+		for (const time in rarities[day]) {
+			final[day + " " + time] = []
+		}
+	}
 
-        // 3. If the time string is in the finalSchedule object, we can just push the student
-        if (times[0] in finalSchedule) {
-            // The only place where we need to check if an array is len of 5
-            if (finalSchedule[times[0]].length === minStudents) {
-                // Go thru all students and remove this current time since its maxxed
-                for (let i = 0; i < processedData.students.length; i++) {
-                    // For student i, remove all traces of time[0]
-                    let index = processedData.students[i].freeTimes.indexOf(times[0])
-                    if (index !== -1) {
-                        processedData.students[i].freeTimes.splice(index, 1)
-                    }
-                }
-            } else {
-                finalSchedule[times[0]].push(student)
-            }
-        }
-        // 4. Otherwise, we need to initialize a list with the student
-        else {
-            finalSchedule[times[0]] = [student]
-        }
-
-    } 
-	// 2. We have encountered a student with no availability, this is an edge case
-    else {
-        console.log(`Empty Times ${student}`)
-    }
-	
-    // Remove the student that we just assigned a time
-    const removeStuIndex = processedData.students.findIndex(obj => obj.name === student);
-    processedData.students.splice(removeStuIndex, 1);
-
-    // Resort the student's times array to reflect the updated rarities
-	sortStudents(processedData)
+	return final
 }
 
 //prettier-ignore
-const scheduleStudents = ( processedData: processedDataType, minStudents: number ) => {
+const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number ) => {
 	// 1. Initialize the final schedule to return
-	let finalSchedule: finalScheduleType = {}
-
-
+	let finalSchedule = preInitFinalSchedule( processedData.rarities )
+	
 	// 2. While there still students that are available, add them to finalSchedule
     while (processedData.students.length > 0) {
-        let firstStu = processedData.students[0];
-        pushSchedule(firstStu.freeTimes, firstStu.name, finalSchedule, processedData, minStudents)
+		// 1. Get first student & their time
+		let curStu = processedData.students[0]
+
+		// 2. Destructure times since times = "Monday 11am-12pm", used for updating rarities
+		let [day, timeRange] = curStu.freeTimes[0].trim().split(" ").filter(i => i)
+
+		// 3. If freeTimes[0] is full, remove the time until we have an open time
+		while (curStu.freeTimes.length > 0 && finalSchedule[curStu.freeTimes[0]].length === minStudents) {
+			curStu.freeTimes.shift()
+		}
+
+		if (curStu.freeTimes.length === 0){
+			console.log("Error")
+		} 
+		else {
+			// 4. Push the student to the schedule
+			finalSchedule[curStu.freeTimes[0]].push(curStu.name)
+
+			// 5. Remove the student
+			const removeStuIndex = processedData.students.findIndex(stu => stu.name === curStu.name);
+			processedData.students.splice(removeStuIndex, 1);
+			
+			// Resort the student's times array to reflect the updated rarities
+			sortStudents(processedData)
+		}
     }
 
 	return finalSchedule
@@ -210,6 +196,7 @@ const generateSchedule = (stuCSV: string[][], minStudents:number) => {
 	const finalSchedule = scheduleStudents(processedData, minStudents)
 
 	console.log(finalSchedule)
+	console.log(processedData)
 };
 
 export default generateSchedule;
