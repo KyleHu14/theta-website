@@ -23,6 +23,9 @@ import { ParseResult } from "papaparse";
 // Import Algorithm Function
 import generateSchedule from "../../../utils/algorithm";
 
+// file-saver
+import { saveAs } from "file-saver";
+
 export default function BoothingPage() {
 	// useStates for files & parsing
 	const [file, setFile] = useState<File | null>(null);
@@ -46,6 +49,20 @@ export default function BoothingPage() {
 		}
 	};
 
+	const handleDownloadCSV = () => {
+		var csv = Papa.unparse({
+			fields: ["Column 1", "Column 2"],
+			data: [
+				["foo", "bar"],
+				["abc", "def"],
+			],
+		});
+
+		var csvData = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+		saveAs(csvData, "file.csv");
+	};
+
 	return (
 		<Flex direction="column" align="center" justify="center">
 			<div className={css.fileInput}>
@@ -67,6 +84,10 @@ export default function BoothingPage() {
 
 				<Button className={css.mTop} onClick={handleGenerate}>
 					Generate Schedule
+				</Button>
+
+				<Button className={css.mTop} onClick={handleDownloadCSV}>
+					Download Schedule
 				</Button>
 			</div>
 

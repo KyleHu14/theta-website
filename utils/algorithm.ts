@@ -55,9 +55,12 @@ const updateRarities = (
  * @param stuAvail - A 2D list of the CSV file, where row 0 represents the column titles and data actually starts at row 1, col 0 represents time stamps
  * @returns
  */
-const processSchedule = (stuCSV: string[][]) => {
+const processCSV = (stuCSV: string[][]) => {
 	// 1. students : object with student key that points to list of available times
 	let students: StuType[] = [];
+
+	let days: string[] = []
+	let times: string[] = []
 
 	/** 
 		2.  rarities : object that holds how rare every time in a particular day is
@@ -67,10 +70,15 @@ const processSchedule = (stuCSV: string[][]) => {
 	*/
 	let rarities: RarityObjectType = {};
 	
-	// Initialize each day as an object, rarities["Monday"] = {}
 	for (let col = 2; col < stuCSV[0].length; col++) {
-		// Remove whitespace w regex
-		rarities[stuCSV[0][col].replace(/\s+/g, "")] = {};
+		// 1. Remove whitespace w regex
+		let day = stuCSV[0][col].replace(/\s+/g, "")
+		
+		// 2. Initialize each day as an object, rarities["Monday"] = {}
+		rarities[day] = {};
+
+		// 3. Update the days list
+		days.push(day)
 	}
 
 	// Why is row = 1? Row 0 represents are column titles (Name, Timestamp, Monday, etc.), we can skip this
@@ -165,7 +173,7 @@ const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number
 		while (curStu.freeTimes.length > 0 && finalSchedule[curStu.freeTimes[0]].length === minStudents) {
 			curStu.freeTimes.shift()
 		}
-
+		
 		if (curStu.freeTimes.length === 0){
 			console.log("Error")
 		} 
@@ -185,9 +193,13 @@ const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number
 	return finalSchedule
 };
 
+const convertFormat = () => {
+
+}
+
 const generateSchedule = (stuCSV: string[][], minStudents:number) => {
 	// Step 1 : Parse through stuAvail, calculate rarities of each day
-	const processedData = processSchedule(stuCSV)
+	const processedData = processCSV(stuCSV)
 
 	// Step 2 : processedData now has the processed data, let's sort each student by the number of times they are available
 	sortStudents(processedData)
@@ -195,8 +207,8 @@ const generateSchedule = (stuCSV: string[][], minStudents:number) => {
 	// Step 3 : We can now schedule the students properly
 	const finalSchedule = scheduleStudents(processedData, minStudents)
 
-	console.log(finalSchedule)
-	console.log(processedData)
+	// Step 4 : Convert finalSchedule into a 2D array format that can be unparsed by papa parse
+
 };
 
 export default generateSchedule;

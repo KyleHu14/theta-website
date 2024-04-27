@@ -1,5 +1,8 @@
 .fileInput {
-	max-width: var(--max-w-sm);
+	display: flex;
+	flex-direction: column;
+
+	width: var(--max-w-sm);
 
 	border: rem(1px) solid
 		light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
