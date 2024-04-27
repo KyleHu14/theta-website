@@ -43,7 +43,6 @@ const updateRarities = (
 	}
 };
 
-
 //prettier-ignore
 /**
  * This function performs the following :
@@ -143,18 +142,18 @@ const sortStudents = ({ students, rarities, }: {
 	}
 };
 
-const preInitFinalSchedule = ( rarities: RarityObjectType ) => {
-	let final: FinalScheduleType = {}
+const preInitFinalSchedule = (rarities: RarityObjectType) => {
+	let final: FinalScheduleType = {};
 
 	// 1. For each day & all its times, initialize it in the final schedule as an empty list
 	for (const day in rarities) {
 		for (const time in rarities[day]) {
-			final[day + " " + time] = []
+			final[day + " " + time] = [];
 		}
 	}
 
-	return final
-}
+	return final;
+};
 
 //prettier-ignore
 const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number ) => {
@@ -166,20 +165,22 @@ const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number
 		// 1. Get first student & their time
 		let curStu = processedData.students[0]
 
-		// 2. Destructure times since times = "Monday 11am-12pm", used for updating rarities
-		let [day, timeRange] = curStu.freeTimes[0].trim().split(" ").filter(i => i)
-
 		// 3. If freeTimes[0] is full, remove the time until we have an open time
 		while (curStu.freeTimes.length > 0 && finalSchedule[curStu.freeTimes[0]].length === minStudents) {
 			curStu.freeTimes.shift()
 		}
 		
 		if (curStu.freeTimes.length === 0){
-			console.log("Error")
+			processedData.students.shift()
 		} 
 		else {
+			// 2. Destructure times since times = "Monday 11am-12pm", used for updating rarities
+			let [day, timeRange] = curStu.freeTimes[0].trim().split(" ").filter(i => i)
+
 			// 4. Push the student to the schedule
 			finalSchedule[curStu.freeTimes[0]].push(curStu.name)
+
+			processedData.rarities[day][timeRange] -= 1
 
 			// 5. Remove the student
 			const removeStuIndex = processedData.students.findIndex(stu => stu.name === curStu.name);
@@ -193,22 +194,22 @@ const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number
 	return finalSchedule
 };
 
-const convertFormat = () => {
+const convertFormat = (schedule: FinalScheduleType) => {
+	console.log(schedule);
+};
 
-}
-
-const generateSchedule = (stuCSV: string[][], minStudents:number) => {
+const generateSchedule = (stuCSV: string[][], minStudents: number) => {
 	// Step 1 : Parse through stuAvail, calculate rarities of each day
-	const processedData = processCSV(stuCSV)
+	const processedData = processCSV(stuCSV);
 
 	// Step 2 : processedData now has the processed data, let's sort each student by the number of times they are available
-	sortStudents(processedData)
+	sortStudents(processedData);
 
 	// Step 3 : We can now schedule the students properly
-	const finalSchedule = scheduleStudents(processedData, minStudents)
+	const finalSchedule = scheduleStudents(processedData, minStudents);
 
 	// Step 4 : Convert finalSchedule into a 2D array format that can be unparsed by papa parse
-
+	return convertFormat(finalSchedule);
 };
 
 export default generateSchedule;
