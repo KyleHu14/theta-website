@@ -59,7 +59,8 @@ const processCSV = (stuCSV: string[][]) => {
 	let students: StuType[] = [];
 
 	let days: string[] = []
-	let times: string[] = []
+
+	let times = new Set()
 
 	/** 
 		2.  rarities : object that holds how rare every time in a particular day is
@@ -95,6 +96,10 @@ const processCSV = (stuCSV: string[][]) => {
 				// 1. Time is in str format : "11am-12pm, 12pm-1pm", need to split
 				const timesList = stuCSV[row][col].split(", ");
 
+				timesList.map((time: string) => {
+					times.add(time)
+				})
+
 				// 2. Transform "Wednesday" & ["11am-12pm", "12pm-1pm"] to ["Wednesday 11am-12pm", "Wednesday 12pm-1pm"]
 				stuObj.freeTimes = stuObj.freeTimes.concat(reformatTimes(stuCSV[0][col], timesList))
 				
@@ -107,8 +112,10 @@ const processCSV = (stuCSV: string[][]) => {
 		students.push(stuObj);
 	}
 
+	console.log(times)
+
 	// 4. Return everything as an object
-	return { students: students, rarities: rarities }
+	return { students: students, rarities: rarities, days: days }
 }
 
 // prettier-ignore
@@ -147,6 +154,7 @@ const preInitFinalSchedule = (rarities: RarityObjectType) => {
 
 	// 1. For each day & all its times, initialize it in the final schedule as an empty list
 	for (const day in rarities) {
+		// 1. Need to get days as headers
 		for (const time in rarities[day]) {
 			final[day + " " + time] = [];
 		}
@@ -194,8 +202,9 @@ const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number
 	return finalSchedule
 };
 
-const convertFormat = (schedule: FinalScheduleType) => {
-	console.log(schedule);
+const convertFormat = (schedule: FinalScheduleType, days: string[]) => {
+	const cols = ["Times", "Students"];
+	let colData: string[][] = [[], []];
 };
 
 const generateSchedule = (stuCSV: string[][], minStudents: number) => {
@@ -209,7 +218,7 @@ const generateSchedule = (stuCSV: string[][], minStudents: number) => {
 	const finalSchedule = scheduleStudents(processedData, minStudents);
 
 	// Step 4 : Convert finalSchedule into a 2D array format that can be unparsed by papa parse
-	return convertFormat(finalSchedule);
+	convertFormat(finalSchedule, processedData.days);
 };
 
 export default generateSchedule;
