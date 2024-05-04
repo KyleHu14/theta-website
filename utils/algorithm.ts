@@ -115,7 +115,7 @@ const processCSV = (stuCSV: string[][]) => {
 	console.log(times)
 
 	// 4. Return everything as an object
-	return { students: students, rarities: rarities, days: days }
+	return { students: students, rarities: rarities, days: days, times : Array.from(times)}
 }
 
 // prettier-ignore
@@ -202,7 +202,11 @@ const scheduleStudents = ( processedData: ProcessedDataType, minStudents: number
 	return finalSchedule
 };
 
-const convertFormat = (schedule: FinalScheduleType, days: string[]) => {
+const convertFormat = (
+	schedule: FinalScheduleType,
+	days: string[],
+	times: any[]
+) => {
 	const cols = ["Times", "Students"];
 	let colData: string[][] = [[], []];
 };
@@ -218,7 +222,7 @@ const generateSchedule = (stuCSV: string[][], minStudents: number) => {
 	const finalSchedule = scheduleStudents(processedData, minStudents);
 
 	// Step 4 : Convert finalSchedule into a 2D array format that can be unparsed by papa parse
-	convertFormat(finalSchedule, processedData.days);
+	convertFormat(finalSchedule, processedData.days, processedData.times);
 };
 
 export default generateSchedule;
